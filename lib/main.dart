@@ -1,3 +1,4 @@
+import 'package:contacts_service/contacts_service.dart';
 import 'package:five_contacts/widgets/contacts.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
@@ -16,7 +17,7 @@ class MyApp extends StatelessWidget {
 
         primarySwatch: Colors.blue,
       ),
-      home: MyHomePage(title: 'Flutter Demo Home Page'),
+      home: MyHomePage(title: 'SOS Contatos'),
     );
   }
 }
@@ -32,9 +33,74 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
 
+  List<Contact> sos_contacts = [];
+
 
   @override
+  void initState() {
+    super.initState();
+
+  }
+
+  Map color_map(List<Contact> list_) {
+
+    Map<String, Color> contactsColorMap = new Map();
+
+    List colors = [
+      Colors.green,
+      Colors.indigo,
+      Colors.yellow,
+      Colors.orange
+    ];
+
+    int colorIndex = 0;
+
+    list_.forEach((contact) {
+
+      Color baseColor = colors[colorIndex];
+      contactsColorMap[contact.displayName] = baseColor;
+      colorIndex++;
+
+      if (colorIndex == colors.length) {
+        colorIndex = 0;
+      }
+    });
+
+    return contactsColorMap;
+
+  }
+
+  bool check_matche_contacts(List<Contact> constacts, Contact target){
+
+    for (var i = 0; i < constacts.length; i++){
+
+      if (constacts[i].displayName == target.displayName){
+        return true;
+      }
+
+    }
+
+    return false;
+
+  }
+  
+  @override
   Widget build(BuildContext context) {
+
+    callback(Contact contact){
+      Navigator.pop(context);
+      
+
+      if (!check_matche_contacts(sos_contacts, contact)){
+        
+
+        setState(() {
+          sos_contacts.add(contact);
+        });
+
+      }
+
+    }
 
     return Scaffold(
       appBar: AppBar(
@@ -47,12 +113,66 @@ class _MyHomePageState extends State<MyHomePage> {
 
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            Text(
-              'You have pushed the button this many times:',
-            ),
-            Text(
-              'Hora do Show',
-              style: Theme.of(context).textTheme.headline4,
+
+            sos_contacts.length > 0 ?
+            Expanded(
+              child: ListView.builder(
+
+                  shrinkWrap: true,
+                  itemCount: sos_contacts.length,
+                  itemBuilder: (context, index) {
+
+                    Contact contact = sos_contacts[index];
+
+
+                    var contactsColorMap = color_map(sos_contacts);
+
+                    var baseColor = contactsColorMap[contact.displayName] as dynamic;
+
+                    Color color1 = baseColor[800];
+                    Color color2 = baseColor[400];
+
+                    return ListTile(
+
+                      title: Text(contact.displayName == null? '' : contact.displayName),
+                      subtitle: Text(
+                          contact.phones.length > 0 ? contact.phones.elementAt(0).value : ''
+                      ),
+                      leading: (contact.avatar != null && contact.avatar.length > 0) ?
+                      CircleAvatar(
+                        backgroundImage: MemoryImage(contact.avatar),
+                      ) :
+                      Container(
+                          decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              gradient: LinearGradient(
+                                  colors: [
+                                    color1,
+                                    color2,
+                                  ],
+                                  begin: Alignment.bottomLeft,
+                                  end: Alignment.topRight
+                              )
+                          ),
+                          child: CircleAvatar(
+                              child: Text(
+                                  contact.initials(),
+                                  style: TextStyle(
+                                      color: Colors.white
+                                  )
+                              ),
+                              backgroundColor: Colors.transparent
+                          )
+                      ),
+                    );
+                  }
+              ),
+            ) : Container(
+              padding: EdgeInsets.all(20),
+              child: Text(
+                  'Não tem ninguem para chamar! CORRE',
+                  style: Theme.of(context).textTheme.headline6
+              ),
             ),
           ],
         ),
@@ -61,7 +181,7 @@ class _MyHomePageState extends State<MyHomePage> {
         onPressed: () {
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => ConstactsSearch()),
+            MaterialPageRoute(builder: (context) => ConstactsSearch(callback)),
           );
         },
         tooltip: 'Add',

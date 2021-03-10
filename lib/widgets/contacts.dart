@@ -4,6 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 class ConstactsSearch extends StatefulWidget {
+
+  final void Function(Contact) callback;
+
+  ConstactsSearch(this.callback);
+
   @override
   _ConstactsSearchState createState() => _ConstactsSearchState();
 }
@@ -24,10 +29,38 @@ class _ConstactsSearchState extends State<ConstactsSearch> {
   getPermissions() async {
     if (await Permission.contacts.request().isGranted) {
       getAllContacts();
-      //searchController.addListener(() {
-      //  filterContacts();
-      //});
+
+      searchController.addListener(() {
+        filterContacts();
+      });
+
     }
+
+  }
+
+  bool match_search(Contact contact, String searchTerm){
+
+    String contact_name = contact.displayName != null ? contact.displayName.toLowerCase() : '';
+    String contact_number = contact.phones.length > 0 ? contact.phones.elementAt(0).value : '';
+
+    return contact_name.contains(searchTerm) || contact_number.contains(searchTerm);
+
+  }
+
+  filterContacts() {
+
+    if (searchController.text.isNotEmpty) {
+      String searchTerm = searchController.text.toLowerCase();
+
+      var filter_list = contacts.where((element) =>
+          match_search(element, searchTerm));
+
+      setState(() {
+        contactsFiltered = filter_list.toList();
+      });
+    }
+
+
   }
 
   getAllContacts() async {
@@ -52,7 +85,10 @@ class _ConstactsSearchState extends State<ConstactsSearch> {
     });
   }
 
+  callback_function(Contact contact) {
 
+    print(contact.displayName);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -99,6 +135,10 @@ class _ConstactsSearchState extends State<ConstactsSearch> {
                       Color color2 = baseColor[400];
 
                       return ListTile(
+                          onTap: (){
+                            widget.callback(contact);
+                          },
+
                           title: Text(contact.displayName == null? '' : contact.displayName),
                           subtitle: Text(
                               contact.phones.length > 0 ? contact.phones.elementAt(0).value : ''
@@ -135,7 +175,7 @@ class _ConstactsSearchState extends State<ConstactsSearch> {
             ) : Container(
             padding: EdgeInsets.all(20),
             child: Text(
-                isSearching ?'No search results to show' : 'No contacts exist',
+                isSearching ?'Não achei ninguem...' : 'Sem contatos... Vá fazer amigos',
                 style: Theme.of(context).textTheme.headline6
             ),
           ),
