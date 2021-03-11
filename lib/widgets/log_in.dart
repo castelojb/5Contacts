@@ -94,7 +94,7 @@ class LoginScreen extends StatelessWidget {
     return FlutterLogin(
 
       title: 'SOS Contatos',
-      //logo: 'assets/images/ecorp.png',
+      logo: 'images/icon.png',
       onLogin:  _authUser,
       onSignup: _createUser,
       onSubmitAnimationCompleted: () {
