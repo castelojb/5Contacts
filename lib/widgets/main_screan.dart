@@ -6,6 +6,9 @@ import 'package:flutter/widgets.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
+import 'package:fab_circular_menu/fab_circular_menu.dart';
+
+import 'log_in.dart';
 
 
 class SOSscrean extends StatelessWidget {
@@ -253,16 +256,35 @@ class _MyHomePageState extends State<MyHomePage> {
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => ConstactsSearch(callback)),
-          );
-        },
-        tooltip: 'Add',
-        child: Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
+      floatingActionButton: FabCircularMenu(
+        fabOpenIcon: Icon(Icons.menu, color: Colors.white),
+        fabCloseIcon: Icon(Icons.close, color: Colors.white),
+        children: [
+          IconButton(
+            color: Colors.white,
+              icon: Icon(Icons.add),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => ConstactsSearch(callback)),
+                );
+              }),
+          IconButton(
+            color: Colors.white,
+              icon: Icon(Icons.logout),
+              onPressed: () async {
+                SharedPreferences prefs = await SharedPreferences.getInstance();
+                await prefs.setBool('auto_log', false);
+
+                Navigator.of(context).pushReplacement(MaterialPageRoute(
+                    builder: (context) => LoginScreen()
+                ));
+
+              })
+
+        ],
+
+      ),
     );
   }
 }
