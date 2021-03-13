@@ -38,27 +38,7 @@ class LoginScreen extends StatelessWidget {
     });
   }
 
-  Future<String> _recoverPassword(String name) async {
 
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-
-    List<String> users = prefs.getStringList('users') ?? [];
-    List<String> passwords = prefs.getStringList('pass') ?? [];
-
-
-    return Future.delayed(loginTime).then((_) {
-
-      if (!users.contains(name)) {
-
-        return 'Usuário não existe!';
-
-      }
-      int index = users.indexOf(name);
-      return passwords[index];
-
-    });
-
-  }
 
   Future<String> _createUser(LoginData data) async {
 
@@ -89,17 +69,80 @@ class LoginScreen extends StatelessWidget {
   }
 
 
+
+
   @override
   Widget build(BuildContext context) {
+
+    Future<String> _recoverPassword(String name) async {
+
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+
+      List<String> users = prefs.getStringList('users') ?? [];
+      List<String> passwords = prefs.getStringList('pass') ?? [];
+
+
+      return Future.delayed(loginTime).then((_)  {
+
+        if (!users.contains(name)) {
+
+          return 'Usuário não existe!';
+
+        }
+        int index = users.indexOf(name);
+        String password_user =  passwords[index];
+
+
+
+        showDialog(context: context,
+            builder: (_) => AlertDialog(
+              title: Text('Senha'),
+              content: Text('Sua senha é: $password_user'),
+              elevation: 24.0,
+
+            )
+        );
+
+        return null;
+
+      });
+
+    }
     return FlutterLogin(
 
       title: 'SOS Contatos',
-      logo: 'images/icon.png',
       onLogin:  _authUser,
       onSignup: _createUser,
-      onSubmitAnimationCompleted: () {
+      onSubmitAnimationCompleted: () async {
+        await showDialog(context: context,
+            builder: (_) => AlertDialog(
+              title: Text('Bem vindo(a)!'),
+              content: Text('Posso salvar essa conta como login automático?'),
+              actions: [
+                TextButton(
+                    onPressed: () async {
+                      SharedPreferences prefs = await SharedPreferences.getInstance();
+                      await prefs.setBool('auto_log', true);
+                      Navigator.of(context, rootNavigator: true).pop('dialog');
+                    },
+                    child: Text('Claro!')
+                ),
+                TextButton(
+                    onPressed: () async {
+                      SharedPreferences prefs = await SharedPreferences.getInstance();
+                      await prefs.setBool('auto_log', false);
+                      Navigator.of(context, rootNavigator: true).pop('dialog');
+                    },
+                    child: Text('Estou só de passagem')
+                ),
+              ],
+              elevation: 24.0,
+
+            )
+        );
         Navigator.of(context).pushReplacement(MaterialPageRoute(
-          builder: (context) => SOSscrean(),
+          builder: (context) => SOSscrean()
+
         ));
       },
       onRecoverPassword: _recoverPassword,
@@ -114,10 +157,12 @@ class LoginScreen extends StatelessWidget {
         recoverPasswordButton: 'SOCORRO',
         goBackButton: 'VOLTAR',
         confirmPasswordError: 'Não Achei!',
+        recoverPasswordIntro: 'Quem é você?',
         recoverPasswordDescription:
-        'Muita calma nessa hora champs',
+        'Preste atenção na discreta mensagem com sua senha...',
         recoverPasswordSuccess: 'Senha recuperada com sucesso!',
       ),
     );
+
   }
 }
